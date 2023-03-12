@@ -1,0 +1,1025 @@
+# importing libararies
+import speech_recognition as sr
+import pyttsx3
+import os
+from bs4 import BeautifulSoup
+import requests
+import math
+from math import factorial
+import webbrowser
+from AppOpener import run
+import openpyxl
+import turtle
+from PIL import Image, ImageFilter
+import random
+import imageio
+imageio.plugins.ffmpeg.download()
+import moviepy.editor as mp
+import cv2
+import docx
+from gtts import gTTS
+import speech_recognition as sr
+import subprocess
+import periodictable
+import socket
+import wikipedia
+import pywhatkit
+import pywhatkit as kit
+import win32api
+import win32print
+import datetime
+
+
+
+# Initialize the speech engine
+engine = pyttsx3.init()
+voices = engine.getProperty('voices')
+# Set the volume and rate of speech
+engine.setProperty('voice', voices[0].id)
+engine.setProperty('volume', 10.3)
+engine.setProperty('rate', 150)
+
+
+# creating a function for user speaking
+def speak(text):
+    engine.say(text)
+    engine.runAndWait()
+
+# creating a function for listening to user
+def listen():
+    r = sr.Recognizer()
+    with sr.Microphone(1) as source:
+        print('Listening...')
+        audio = r.listen(source)
+        r.pause_threshold = 1
+    
+    # trying to listen to the user and if it is 0 it gives back an error
+    try:
+        input = r.recognize_google(audio)
+        print(f'You said: {input}')
+        return input
+    except sr.UnknownValueError:
+        print('Sorry, I could not understand what you said. Listening again...')
+        return listen()
+    except sr.RequestError as e:
+        print('Error: Could not request results from the speech recognition service.')
+
+
+
+# creating functions for adding and reading meetings
+def add_meeting(meeting_details, meeting_time):
+    # Check if the file exists. If it doesn't, create it.
+    if not os.path.exists('meetings.txt'):
+        open('meetings.txt', 'w').close()
+
+    # Write the meeting time and details to the file
+    with open('meetings.txt', 'a') as f:
+        f.write(f'{meeting_details} at {meeting_time}\n')
+
+def get_meetings():
+    # Check if the file exists. If it doesn't, create it.
+    if not os.path.exists('meetings.txt'):
+        open('meetings.txt', 'w').close()
+
+    # Read the contents of the file
+    with open('meetings.txt', 'r') as f:
+        return f.read()
+
+
+
+
+# Set the user agent to a common web browser
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
+
+# function for getting the weather in damavand city
+def weather(city):
+    from bs4 import BeautifulSoup
+    import requests
+    # Replace spaces in the city name with plus signs
+    city = city.replace(" ", "+")
+
+    # trying to get the info for damavand city
+    try:
+        # Search for the weather in the given city
+        res = requests.get(
+            f'https://www.google.com/search?q={city}&oq={city}&aqs=chrome.0.35i39l2j0l4j46j69i60.6128j1j7&sourceid=chrome&ie=UTF-8', headers=headers)
+        # Parse the search results using BeautifulSoup
+        soup = BeautifulSoup(res.text, 'html.parser')
+        # Get the location, time, info, and weather from the search results
+        location = soup.select('#wob_loc')[0].getText().strip()
+        time = soup.select('#wob_dts')[0].getText().strip()
+        info = soup.select('#wob_dc')[0].getText().strip()
+        weather = soup.select('#wob_tm')[0].getText().strip()
+        # Print the location, time (not needed), info, and weather details
+        print(location)
+        print(info)
+        print(weather)
+        speak(f"today, the weather on {location} will be {info} with the temprature of {weather}")
+    
+    # exception for the index error for passing the part when having an index error
+    except IndexError:
+        print("An error has occurred. Unable to retrieve weather information.")
+
+# giving the city name to the function
+city = "damavand city weather"
+
+
+# function for adding a writing
+def add_writing(writing):
+    # Check if the file exists. If it doesn't, create it.
+    if not os.path.exists('writings.txt'):
+        open('writings.txt', 'w').close()
+
+    # Write the meeting time and details to the file
+    with open('writings.txt', 'a') as f:
+        f.write(f'{writing}\n')
+
+
+# function for reading writings
+def get_writings():
+    # Check if the file exists. If it doesn't, create it.
+    if not os.path.exists('writings.txt'):
+        open('writings.txt', 'w').close()
+
+    # Read the contents of the file
+    with open('writings.txt', 'r') as f:
+        return f.read()
+
+
+
+# function for closing groove music (stopping music playing in bg)
+def close_groove_music():
+    # Check if Groove Music is running
+    proc = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq Music.UI.exe'], stdout=subprocess.PIPE)
+    output = proc.stdout.decode('utf-8')
+    if 'Music.UI.exe' in output:
+        # If Groove Music is running, close it
+        subprocess.run(['taskkill', '/IM', 'Music.UI.exe'], stdout=subprocess.PIPE)
+        speak('music stopped')
+    else:
+        # If Groove Music is not running, print a message
+        speak('No music is playing')
+
+# defining the current time obj and hour
+current_time = datetime.datetime.now()
+hour = current_time.hour
+
+# function for greeting the user
+def greeting():
+    os.startfile("black in black short.ogg")
+    if hour >= 6 and hour < 12:
+        speak("Good morning!")
+    elif hour >= 12 and hour < 18:
+        speak("Good afternoon!")
+    else:
+        speak("Good evening!")
+    # Prompt the user for the command
+    weather(city)
+    speak(f"your meetings include: {get_meetings()}")
+
+
+# adding some response for the key used in the future lines
+responses = {
+    "greetings": ["Hi there! How can I help you today?", "Hello!", "Hello sir, welcome back", "Hello! how can i help you today sir?"],
+    "goodbye": ["Goodbye! It was nice talking to you.", "Goodbye!", "goodbye, have a nice evening!"],
+    "how are you?": ["I'm an AI machine, so I don't have feelings like humans do. I'm here to help you with your questions.", "as always, great!", "because of talking to you great!", "couldnt feel any better!"],
+    "who are you?": ["I am an Artificial Intelligence machine created by Mehrshad in python language, and my name is Jarvis!", "i am jarvis.", "im an nlp AI machine!", ],
+    "who made you?": ["I am created by mehrshad.", "an stupid person!", "i am not sure, but the person should jave been a genius!"],
+    "have you ate lunch?": ["robots can't eat while their in a computer shape!", "No", "yeah! i had some web cookies!", "whats wrong with you?!"],
+    "you seem bored today": ["i dont know from where and how you saw that and say that, but I am just a programmed robot!", "well, i dont have feelings...", "im a robot man! go talk with a human!"],
+    "do you travel?": ["if i had a shape i really loved to!", "not with you probably!", "of cource!", "i'd love to!"],
+    "do you want to eat dinner?": ["i dont have a body but i'll love some mashed potatoes!", "Yes ofc!", "i told you like 3 hours ago!", "yeah i do when i get my phisical shape!"],
+    "thank you": ["not a problem!", "it is my pleasure helping you"]
+}
+
+
+
+# adding some musics to use
+musics_list = ["black in black.mp3", "crazy in train.mp3", "entre sandman.mp3", "cold.mp3"]
+selected_music_list = random.choice(musics_list)
+
+# key command for waking up the bot
+print("waiting for (hello)")
+key_command = listen()
+
+# listening endlessly for "hello"
+while not "hello" in key_command:
+    key_command = listen()
+    print("waiting for (hello)")
+
+# main code
+if "hello" in key_command:
+    greeting()
+    speak("what can i help you with today?")
+    inp = listen()
+    inp = inp.lower()
+
+    # main loop
+    while inp != "exit":
+    # responses
+        if "hello" in inp or "jarvis" in inp:
+            speak(random.choice(responses["greetings"]))
+        elif "bye" in inp or "it was nice talking to you" in inp or "see you" in inp or "cya" in inp:
+            speak(random.choice(responses["goodbye"]))
+            break
+        elif "how are you" in inp or "whats up" in inp or "what's up" in inp or "what is up" in inp or "how you doing" in inp or "how are the things going" in inp:
+            speak(random.choice(responses["how are you?"]))
+            
+            speak("How can i help you?")
+        elif "who are you" in inp or "what are you" in inp or "describe" in inp or "description" in inp or "about" in inp:
+            speak(random.choice(responses["who are you?"]))
+            
+            speak("How can i help you today?")
+        elif "who made you" in inp or "who created you" in inp or "created" in inp or "built" in inp:
+            speak(random.choice(responses["who made you?"]))
+            
+            speak("How can i help you today?")
+        elif "lunch" in inp or "food" in inp or "dinner" in inp or "breakfast" in inp:
+            speak(random.choice(responses["have you ate lunch?"]))
+            
+            speak("How can i help you today?")
+        elif "bored" in inp or "feeling" in inp or "sad" in inp or "cry" in inp or "fur" in inp or "emotion" in inp:
+            speak(random.choice(responses["you seem bored today"]))
+            
+            speak("How can i help you today?")
+        elif "travel" in inp or "trip" in inp:
+            speak(random.choice(responses["do you travel?"]))
+
+            speak("How can i help you today?")
+        elif "do you want to eat dinner" in inp:
+            speak(random.choice(responses["do you want to eat dinner?"]))
+
+            speak("How can help you today?")
+        elif "thank you" in inp:
+            speak(random.choice(responses["thank you"]))
+    
+    # math codes
+        elif "pythagoras" in inp:
+            # Prompt the user for the values of a and b
+            speak("entre the A")
+            try:
+                a = int(listen())
+            except ValueError:
+                speak("please entre a valid number")
+                a = int(listen())
+            try:
+                speak("entre the B")
+                b = int(listen())
+            except ValueError:
+                speak("please entre a valid number")
+                b = int(listen())
+            # Calculatxe c using the Pythagorean theorem
+            c = math.sqrt(a ** 2 + b ** 2)                                                    
+            # Print the result
+            speak(c)
+            print(c)
+            speak("What other things can i help you with?")
+            
+        elif "pascal" in inp:
+            speak("entre number of pascal triangle rows")
+            # input n
+            n = int(listen())
+            for i in range(n):
+                for j in range(n-i+1):
+
+                    # for left spacing
+                    print(end=" ")
+
+                for j in range(i+1):
+
+                    # nCr = n!/((n-r)!*r!)
+                    print(factorial(i)//(factorial(j)*factorial(i-j)), end=" ")
+
+                # for new line
+                print()
+            speak("What other things can i help you with?")
+                
+            
+        elif "matrix" in inp:
+            # Get number of rows from user
+            speak("Enter the number of rows for the matrix: (with i)")
+            num_rows = int(listen())
+
+            # Draw the matrix using asterisks
+            for i in range(num_rows):
+                for j in range(num_rows):
+                    print("i", end=" ")
+                print()
+            speak(f"i drow the matrix with {num_rows} rows")
+            speak("What other things can i help you with?")
+
+    # opening url's using default browser
+        elif "site" in inp:
+            # Prompt the user for the URL of the website to open
+            speak("write URL")
+            web = str(input("Enter site URL: "))
+            # Open the website
+            webbrowser.open(web)
+            speak("now opening the website")
+            speak("What other things can i help you with?")
+
+    # science
+        elif "average speed" in inp:
+            # Prompt the user for the time and route values
+            speak("please wrte the time (for example 3)")
+            time = int(input("Please enter time: "))
+            speak("please write the unit for the time (for example hour)")
+            yt = input("Please enter the unit of time: ")
+            speak("please write the route (for example 3)")
+            route = int(input("Please enter route: "))
+            speak("please write the unit for the route (for example meter)")
+            yr = input("Please enter the unit of route: ")
+            # Convert the time and route units to seconds and meters, respectively
+            if yt == "h" and yr == "m":
+                yt = "s"
+                time = time * 3600
+            elif yt == "h" and yr == "km":
+                yt = "s"
+                time = time * 3600
+                yr = "m"
+                route = route * 1000
+            elif yt == "s" and yr == "km":
+                yr = "m"
+                route = route * 1000
+            # Calculate and print the average speed
+            speak(f"Average speed is {time/route}{yr}/{yt}")
+            print(f"Average speed is {time/route}{yr}/{yt}")
+            speak("What other things can i help you with?")
+
+    # opening applications using AppOpener
+        elif "app" in inp:
+            # Loop until the user wants to exit
+            while True:
+                # Prompt the user for the application to open
+                speak("Enter application to open")
+                inp = listen().strip()
+                # If the user entered an application name, open it
+                if inp:
+                    run(inp)
+                    break
+                # Otherwise, exit the loop
+                else:
+                    break
+            speak("What other things can i help you with?")
+                
+    # getting the weather details for damavand city
+        elif "weather" in inp:
+            weather(city)
+            speak("What other things can i help you with?")
+
+    # microsoft excel actions
+        elif "excel" in inp:
+            # Prompt the user for the name of the Excel file
+            speak("Enter the name of the Excel file")
+            workbook_name = listen(
+            )
+            # Create a new workbook and sheet
+            workbook = openpyxl.Workbook()
+            sheet = workbook.active
+            # Loop until the user wants to exit
+            while True:
+                # Prompt the user for the cell and data to input
+                speak("Enter the cell to input data into (e.g. A1)")
+                cell = input("please entre the cell (a1)")
+                speak("Enter the data to input")
+                data = input("please entre the data to input (hello)")
+                # Set the value of the cell to the user-specified data
+                sheet[cell] = data
+                # Prompt the user to continue or exit
+                speak("say 'exit' to exit or say continue to continue")
+                user_input = listen()
+                if user_input.lower() == "exit":
+                    break
+            # Save the workbook
+            workbook.save(f"{workbook_name}.xlsx")
+            speak("workbook saved")
+            speak("What other things can i help you with?")
+
+    # drawing shapes
+        elif "shape" in inp:
+            # setting the speed of the turtle and hiding it
+            turtle.hideturtle()
+            turtle.speed(0)
+            speak("to generate the added shapes write 1 and for 2 for drawing regular shapes")
+            shape = listen()
+
+        # drawing added shapes    
+            if shape == "1" or shape == "one":
+                # Prompt user for input
+                speak("Enter the name of a shape (line, rectangle, triangle, circle, or heart)")
+                shape = listen()
+
+                if shape == "line":
+                    turtle.forward(100)
+                    turtle.done
+
+                elif shape == "circle":
+                    turtle.circle(70)
+                    turtle.done()
+
+                elif shape == "triangle":
+                    turtle.forward(100)
+                    turtle.left(120)
+                    turtle.forward(100)
+                    turtle.left(120)
+                    turtle.forward(100)
+                    turtle.done()
+
+                elif shape == "rectangle":
+                    for i in range(4):
+                        turtle.forward(100)
+                        turtle.left(90)
+                    turtle.done()
+
+                elif shape == "heart":
+                    pen = turtle.Turtle()
+                    def curve():
+                        for i in range(200):
+                            pen.right(1)
+                            pen.forward(1)
+                    def heart():
+                        pen.fillcolor('red')
+                        pen.begin_fill()
+                        pen.left(140)
+                        pen.forward(113)
+                        curve()
+                        pen.left(120)
+                        curve()
+                        pen.forward(112)
+                        pen.end_fill()
+                    heart()
+                    turtle.done()
+
+        # drawing regular shapes
+            elif shape == "2" or shape == "two":
+                speak("please entre the number of shape sides (4.0)")
+                sides = (listen())
+                speak("please entre the number of one of the outer angles (90.0)")
+                angle = (input())
+                # changing int to float 
+                if "." in sides:
+                    sides = float(sides)
+                else:
+                    sides = int(sides)
+                if "." in angle:
+                    angle = float(angle)
+                else:
+                    angle = int(angle) 
+                # drawing the shape with a for loop
+                for i in range(sides):
+                    if sides < 10:
+                        turtle.forward(100)
+                    else:
+                        turtle.forward(50)
+                    turtle.left(angle)
+                turtle.done()
+                speak("What other things can i help you with?")
+        
+    # image editing
+        elif "image" in inp or "picture" in inp:
+            speak("please entre image editing command (resize, filter)")
+            inpimage = listen()
+
+        # resizing images
+            if inpimage == "resize":
+                speak("please write the asked details")
+                imageinput = input("please entre image source with type (example.jpg)")
+                size1input = int(input("please entre size 1 (500)"))
+                size2input = int(input("please entre size 2 (500)"))
+                # opening image
+                image = Image.open(imageinput)
+                print(f"Original size : {image.size}") # 5464x3640
+                # resizing image
+                sunset_resized = image.resize((size1input, size2input))
+                sunset_resized.save(f"resized-{imageinput}")
+                speak(f"image resized and saved to {size1input}x{size2input}")
+        
+        # adding filters to images
+            elif inpimage == "filter":
+                image_file = input("Enter the name of the image file: ")
+                image = Image.open(image_file)
+                speak("Enter the type of filter to apply (grayscale, blur)")
+                filter_type = listen()
+                imagename = input("please entre the image output name")
+                # adding filters with if
+                if filter_type == "grayscale":
+                    image = image.convert("L")  # Convert to grayscale
+                elif filter_type == "blur":
+                    image = image.filter(ImageFilter.BLUR)  # Apply a blur filter
+                else:
+                    speak("Invalid filter type")
+                # saving image
+                image.save(f"{imagename}.jpg")
+                speak(f"image saved as {imagename}.jpg")
+                print(f"image saved as {imagename}.jpg")
+            speak("What other things can i help you with?")
+
+    # getting the latest world news
+        elif "news" in inp:
+            # using bbc for getting the news
+            url = 'https://www.bbc.com/news'
+            response = requests.get(url)
+            soup = BeautifulSoup(response.text, 'html.parser')
+            headlines = soup.find('body').find_all('h3')
+            # removing unwanted sections
+            unwanted = ['BBC World News TV', 'BBC World Service Radio',
+                        'News daily newsletter', 'Mobile app', 'Get in touch']
+            # printing the news
+            for x in list(dict.fromkeys(headlines)):
+                if x.text.strip() not in unwanted:
+                    print(x.text.strip())
+                    speak(f"the news of today are: {x.text.strip()}")
+            
+            speak("What other things can i help you with?")
+
+    # video editing
+        elif "video editing" in inp:
+            speak("what video editing do you want to do? (connector, filter)")
+            inpvideo = listen()
+        
+        # video connector
+            if inpvideo == "connector":
+                speak("how many videos do you want to add? (2-5)")
+                inpconnect = int(listen())
+                video_clips = []
+                for i in range(1, inpconnect+1):
+                    video = mp.VideoFileClip(input(f"please entre the {i} video name and type (example.mp4)"))
+                    video_clips.append(video)
+                videoname = input("please entre a name for output video (test)")
+                final_video = mp.concatenate_videoclips(video_clips)
+                final_video.write_videofile(f"{videoname}.mp4")
+                speak("video saved")
+
+        # adding video filters
+            elif inpvideo == "filter":
+                video_file = input("Enter the name of the video file: ")
+                video = cv2.VideoCapture(video_file)
+                if not video.isOpened():
+                    print("Error loading video file.")
+                    exit()
+                filter = input("Enter the name of the filter to apply (grayscale, invert, blur)")
+                videoname = input("please entre the name of the video (example)")
+                # making the output file
+                out_file = f"{videoname}.mp4"
+                fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+                out_video = cv2.VideoWriter(out_file, fourcc, video.get(cv2.CAP_PROP_FPS), (int(video.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))))
+                while video.isOpened():
+                    ret, frame = video.read()
+                    if ret:
+                        if filter == "grayscale":
+                            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                        elif filter == "invert":
+                            frame = (255 - frame)
+                        elif filter == "blur":
+                            frame = cv2.blur(frame, (5,5))
+                        out_video.write(frame)
+                    else:
+                        break
+                video.release()
+                out_video.release()
+                speak("Video edited and saved to " + out_file)
+            
+            speak("what other things can i help you with?")
+
+    # microsoft word actions
+        elif "word" in inp:
+            speak("Enter the file name")
+            file_name = listen()
+            document = docx.Document()
+            # making a loop for adding text to the file
+            while True:
+                speak("Enter the text to be written in the document (enter 'exit' to stop): ")
+                text = listen()
+                if text.lower() == 'exit':
+                    break
+                paragraph = document.add_paragraph(text)
+                run = paragraph.add_run()
+            document.save(file_name + '.docx')
+            os.startfile(file_name + '.docx')
+            speak("file saved")
+            speak("what other things can i help you with?")
+        
+    # text to speech
+        elif inp == "text to speech":
+            speak("write the text")
+            text = input("Enter the text to be converted to speech: ")
+            # Creating a gTTS object
+            tts = gTTS(text=text)
+            # Save the audio file
+            tts.save("speech.mp3")
+            speak("Audio file saved as 'speech.mp3'")
+            print("Audio file saved as 'speech.mp3'")
+            speak("what other things can i help you with?")
+        
+    # speech to text
+        elif inp == "speech to text":
+            r = sr.Recognizer()
+            speak("how many seconds do you need to talk?")
+            time = int(listen())
+            speak("start talking")
+
+            with sr.Microphone() as source:
+                # read the audio data from the default microphone
+                audio_data = r.record(source, duration=time)
+                print("Recognizing...")
+                # convert speech to text and printing it
+                text = r.recognize_google(audio_data)
+                speak("printing the text")
+                print(text)
+            speak("what other things can i help you with?")
+
+    # games
+        # hang man
+        elif "hang" in inp and "man" in inp:
+            # List of words to choose from for the game
+            words = ["apple", "banana", "orange", "strawberry", "grape"]
+            # Choose a random word from the list
+            word = random.choice(words)
+        # adding underscroes for the word
+            underscores = ["_"] * len(word)
+            # Set the number of chances the player has to guess the word
+            chances = 6
+            # loop
+            while True:
+                # Print the current state of the game
+                print("Current word: ", " ".join(underscores))
+                print("Chances remaining: ", chances)
+                # Get the player's guess
+                speak("Guess a letter")
+                guess = listen()
+                # Check if the guess is in the word
+                if guess in word:
+                    # If it is, update the underscores list to show the correctly guessed letters
+                    for i in range(len(word)):
+                        if word[i] == guess:
+                            underscores[i] = guess
+                else:
+                    # If the guess is not in the word, decrease the number of chances remaining
+                    chances -= 1
+
+                # Check if the player has won
+                if "_" not in underscores:
+                    speak("You win! The word was: ", word)
+                    break
+
+                # Check if the player has run out of chances
+                if chances == 0:
+                    speak("You lose! The word was: ", word)
+                    break
+                speak("what other things can i help you with?")
+
+        # tic tac toe (X O)
+        elif "tic" in inp and "tac" in inp:
+            # Initialize the game board
+            board = [["_"] * 3 for _ in range(3)]
+            # Set the current player (X goes first)
+            current_player = "X"
+
+            while True:
+                # Print the current state of the game board
+                for row in board:
+                    print(" ".join(row))
+                # Prompt the current player for their move
+                speak("Enter row (0-2): ")
+                row = int(listen())
+                speak("Enter column (0-2): ")
+                col = int(listen())
+                # Make sure the move is valid
+                if board[row][col] != "_":
+                    speak("That cell is already occupied. Please try again.")
+                    continue
+                # Place the player's symbol on the board
+                board[row][col] = current_player
+                # Check if the player has won the game
+                if (
+                    # Check rows
+                    board[0][0] == current_player
+                    and board[0][1] == current_player
+                    and board[0][2] == current_player
+                    or board[1][0] == current_player
+                    and board[1][1] == current_player
+                    and board[1][2] == current_player
+                    or board[2][0] == current_player
+                    and board[2][1] == current_player
+                    and board[2][2] == current_player
+                    # Check columns
+                    or board[0][0] == current_player
+                    and board[1][0] == current_player
+                    and board[2][0] == current_player
+                    or board[0][1] == current_player
+                    and board[1][1] == current_player
+                    and board[2][1] == current_player
+                    or board[0][2] == current_player
+                    and board[1][2] == current_player
+                    and board[2][2] == current_player
+                    # Check diagonals
+                    or board[0][0] == current_player
+                    and board[1][1] == current_player
+                    and board[2][2] == current_player
+                    or board[0][2] == current_player
+                    and board[1][1] == current_player
+                    and board[2][0] == current_player
+                ):
+                    speak(f"{current_player} wins!")
+                    break
+
+                # Check if the game is a draw
+                if all(cell != "_" for row in board for cell in row):
+                    speak("The game is a draw.")
+                    break
+
+                # Switch to the other player
+                if current_player == "X":
+                    current_player = "O"
+                else:
+                    current_player = "X"
+            speak("what other things can i help you with?")
+
+    # profiles
+        # profile for studying
+        elif "study" in inp or inp == "study profile" or inp == "studying profile":
+            os.startfile("not forgotten.mp3")
+            os.system('start winword')
+            webbrowser.open("https://www.example.com")
+            speak("Ok sir, now opening the studying profile")
+            speak("what other things can i help you with?")
+
+    # playing musics
+        elif "rock" in inp or "metal" in inp:
+            # List of music file paths
+            music_files = ['black in black.mp3', 'crazy in train.mp3', 'entre sandman.mp3', 'master of puppets.mp3']
+            # Select a random music file
+            selected_music = random.choice(music_files)
+            # Play the selected music file using the default system player
+            os.startfile(selected_music)
+            speak("Ok, now playing what you requested")
+            speak("what other things can i help you with?")
+
+    # periodic table actions
+        elif "periodic" in inp or "element" in inp or "atom" in inp:
+            # Get the element symbol from the user
+            speak("please write the symbol of the element")
+            symbol = input("Enter an element symbol: ")
+
+            # trying to look up for the atom
+            try:
+                element = periodictable.elements.symbol(symbol)
+                # Print out the element's information
+                speak(f"Atom name: {element.name}")
+                print(f"Atom name: {element.name}")
+                speak(f"Atomic number: {element.number}")
+                print(f"Atomic number: {element.number}")
+                speak(f"Atomic mass: {element.mass}")
+                print(f"Atomic mass: {element.mass}")
+                speak(f"Group: {element.charge}")
+                print(f"Group: {element.charge}")
+
+            # exception if the element want found
+            except:
+                speak("Element not found")
+            speak("what other things can i help you with?")
+
+    # getting the ip address of user
+        elif "ip address" in inp:
+            def get_ip_address():
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                s.connect(("8.8.8.8", 80))
+                return s.getsockname()[0]
+            # speaking and printing it
+            speak(f"your ip address is {get_ip_address()}, i also wrote it for company")
+            print(get_ip_address())
+
+            speak("what other things can i help you with?")
+
+    # searching on wikipedia (suggestions only)
+        elif  "wiki" in inp:
+            speak("what do you want to search for?")
+            search = listen()
+            # getting suggestions
+            result = wikipedia.search(search, results = 5)
+            # printing the result
+            speak(result)
+            print(result)
+            speak("what other things can i help you with?")
+
+    # telling jokes
+        elif "joke" in inp:
+            # List of jokes
+            jokes = [
+                "Why was the math book sad? It had too many problems.",
+                "What do you get when you cross a snowman and a vampire? Frostbite.",
+                "Why couldn't the bicycle stand up by itself? It was two-tired.",
+                "Why was the computer cold? It left its Windows open.",
+                "Why was the cat sitting on the computer? It wanted to keep an eye on the mouse.",
+                "Why did the tomato turn red? Because it saw the salad dressing!",
+                "Why was the belt arrested? For holding up a pair of pants!",
+                "Why did the cookie go to the doctor? It was feeling crumbly.",
+                "Why couldn't the bicycle stand up by itself? It was two-tired.",
+                "Why did the scarecrow win an award? Because he was outstanding in his field!"
+            ]
+            # Choose a random joke
+            joke = random.choice(jokes)
+
+            # Print the joke
+            speak(joke)
+            speak("what other things can i help you with?")
+
+    # sending whatsapp messages (should be logged in in the browser)
+        elif "whatsapp" in inp:
+            def send_whatsapp_message(number, message, hour, minute):
+                # Format the time in the correct format
+                time = f'{hour}:{minute:02d}'
+                # Send the WhatsApp message
+                pywhatkit.sendwhatmsg(number, hour, minute, message)
+
+            # Get user input
+            try:
+                speak("please write the whatsapp number")
+                number = input('Enter the WhatsApp number: ')
+                speak("please write the message")
+                message = input('Enter the message to send: ')
+                speak("please write the hour to send")
+                hour = int(input('Enter the hour to send the message (in 24-hour format): '))
+                speak("please write the minute to send")
+                minute = int(input('Enter the minute to send the message: '))
+
+                # Send the WhatsApp message
+                send_whatsapp_message(number, message, hour, minute)
+            except Exception as e:
+                speak("an error occured")
+            speak("what other things can i help you with?")
+
+    # playing youtube videos
+        elif "youtube" in inp:
+            def play_on_youtube(video):
+                kit.playonyt(video)
+            speak("please entre a video to open")
+            video = listen()
+            play_on_youtube(video)
+            speak(f"now playing {video} on youtube")
+            speak("what other things can i help you with?")
+
+    # printing docs
+        elif "print" in inp and "file" in inp:
+            speak("please write the name of the file (pdf not supported)")
+            inpfile = input("entre the name of the file (exp: test.docx)")
+            # Open the Word file
+            filename = f'{inpfile}'
+            os.startfile(filename, 'print')
+            # Wait for the print dialog to appear
+            win32api.Sleep(3000)
+            # Press the "OK" button on the printer (not needed in some cases like mine)
+            win32print.SetDefaultPrinter('HP Color LaserJet Pro M252 PCL 6')
+            win32api.keybd_event(13, 0, 0, 0)
+            win32api.keybd_event(13, 0, 0)
+            speak("what other things can i help you with?")
+
+    # printing my writings that i added before
+        elif "print" in inp and "writing" in inp:
+            # Open the Word file
+            filename = "writings.txt"
+            os.startfile(filename, 'print')
+            # Wait for the print dialog to appear
+            win32api.Sleep(3000)
+            # Press the "OK" button
+            win32print.SetDefaultPrinter('HP Color LaserJet Pro M252 PCL 6')
+            win32api.keybd_event(13, 0, 0, 0)
+            win32api.keybd_event(13, 0, 0)
+            speak("ok, printing your writings")
+            speak("what other things can i help you with?")
+
+    # adding meetings with the function added at the fist of the file
+        elif "add" in inp and "meeting" in inp:
+            # Get the input for the meeting time and details
+            speak("please write the meeting name and details")
+            meeting_details = input('Enter the meeting details: ')
+            speak("please write the time for the meeting")
+            meeting_time = input('Enter the meeting time (e.g. 14:30): ')
+            # Add the meeting to the file
+            add_meeting(meeting_details, meeting_time)
+            speak(f"meeting added as {meeting_details} at {meeting_time}")
+            speak("what other things can i help you with?")
+
+    # printing the meetings added before
+        elif "meetings" in inp:
+            # Print the meetings
+            speak(get_meetings())
+            print(get_meetings())
+            speak("what other things can i help you with?")
+
+    # adding writings
+        elif "add" in inp and "writing" in inp:
+            speak("please tell the writing you want to add")
+            writingl = listen()
+            add_writing(writingl)
+            speak(f"writing added as {writingl}")
+            speak("what other things can i help you with?")
+
+    # printing added writings
+        elif "writings" in inp:
+            speak(get_writings())
+            print(get_writings())
+            speak("what other things can i help you with?")
+
+    # searching on google (searches on default browser)
+        elif "search" in inp:
+            def search_on_google(query):
+              kit.search(query)
+            speak("what do you want to search for?")
+            searchfor = listen()
+            print(search_on_google(searchfor))
+            speak("searching")
+            speak("what other things can i help you with?")
+
+    # os actions
+        # closing groove music
+        elif "stop" in inp and "music" in inp:
+            # Run the function
+            close_groove_music()
+        # shutting down pc
+        elif "shut down" in inp or "turn off pc" in inp or "turn off windows" in inp:
+            # Turn off the PC in 30 seconds
+            os.system("shutdown /s /t 30")
+            speak("turning off the pc in 30 seconds")
+        # sleep
+        elif "sleep" in inp:
+            def sleep_system():
+                subprocess.call(['rundll32.exe', 'powrprof.dll,SetSuspendState', '0,1,0'])
+            sleep_system()
+            speak("putting windows in sleep mode.")
+
+    # playing music
+        elif "music" in inp:
+            os.startfile(selected_music_list)
+
+    # time
+        elif "time" in inp:
+            strTime = datetime.datetime.now().strftime("%H:%M:%S")
+            speak(f"Sir, the time is {strTime}")
+
+
+    # calculation
+        elif "calculate" in inp:
+            def calculate(expression):
+                # Define the operations
+                operations = {
+                    "+": lambda x, y: x + y,
+                    "-": lambda x, y: x - y,
+                    "*": lambda x, y: x * y,
+                    "/": lambda x, y: x / y
+                }
+                
+                # Split the expression into separate components
+                components = expression.split()
+                
+                # Iterate through the components
+                try:
+                    result = float(components[0])
+                    for i in range(1, len(components) - 1, 2):
+                        operator = components[i]
+                        operand = float(components[i + 1])
+                        result = operations[operator](result, operand)
+                except ValueError:
+                    speak("Error: Invalid input.")
+                    return None
+                
+                # Return the result
+                return result
+
+            # Ask the user for the calculation
+            speak("What calculation would you like to perform? (plus, minus, multiplied by, devided by)")
+            expression = listen()
+
+            # Perform the calculation
+            result = calculate(expression)
+            if result is not None:
+                speak(f"The result is {result}.")
+
+
+
+        elif "latest news" in inp:
+            # Make a request to the IMDb website to get the latest popular movies
+            response = requests.get('https://www.imdb.com/chart/moviemeter')
+            # Check if the request was successful
+            if response.status_code == 200:
+                # Use BeautifulSoup to extract the title and release year of each movie
+                soup = BeautifulSoup(response.content, 'html.parser')
+                movies = soup.select('.lister-list tr')
+                for movie in movies[:10]:
+                    title_element = movie.select_one('.titleColumn a')
+                    title = title_element.text
+                    year = movie.select_one('.titleColumn span').text.strip('()')
+                    print(f'{title} ({year})')
+            else:
+                print('Failed to retrieve popular movies.')
+
+
+
+    # if non of above was in the input, print a message
+        else:
+            speak("sorry, i cant do that yet.")
+
+    # listening
+        inp = listen()
+        inp = inp.lower()
